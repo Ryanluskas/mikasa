@@ -1,0 +1,145 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/*
+  Design System do Mikasa.
+
+  Uma paleta só, declarada como variáveis. Light e dark trocam os valores,
+  nunca as classes — por isso nenhum componente precisa saber em que tema
+  está, e o dark mode não é um remendo em cima do light.
+
+  Os valores são RGB sem função para que o Tailwind possa aplicar opacidade
+  (bg-surface/60) sobre qualquer token.
+*/
+
+:root {
+  --mk-bg: 247 246 243; /* #F7F6F3 papel */
+  --mk-surface: 255 255 255;
+  --mk-raised: 251 250 248;
+  --mk-ink: 37 37 37; /* #252525 */
+  --mk-muted: 111 107 101; /* #6F6B65 */
+  --mk-faint: 154 149 141;
+  --mk-line: 231 228 222; /* #E7E4DE */
+  --mk-accent: 141 129 117; /* #8D8175 */
+  --mk-accent-soft: 200 189 177; /* #C8BDB1 */
+  --mk-success: 110 139 106;
+  --mk-warning: 178 148 82;
+  --mk-danger: 166 90 78;
+
+  color-scheme: light;
+}
+
+[data-theme='dark'] {
+  /*
+    Dark mode quente e sem preto absoluto: #000 sobre uma tela OLED cria
+    contraste duro demais para um app que a pessoa abre à noite.
+  */
+  --mk-bg: 23 22 19;
+  --mk-surface: 31 30 26;
+  --mk-raised: 36 35 31;
+  --mk-ink: 237 234 227;
+  --mk-muted: 162 156 147;
+  --mk-faint: 122 116 108;
+  --mk-line: 48 46 41;
+  --mk-accent: 181 167 151;
+  --mk-accent-soft: 110 101 91;
+  --mk-success: 143 174 137;
+  --mk-warning: 211 185 120;
+  --mk-danger: 201 127 112;
+
+  color-scheme: dark;
+}
+
+@layer base {
+  * {
+    @apply border-line;
+  }
+
+  html {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  body {
+    @apply bg-bg text-ink antialiased;
+    font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+    /* Impede o "pulo" horizontal quando um modal trava o scroll. */
+    overflow-x: hidden;
+  }
+
+  /*
+    Foco visível de verdade. Um anel discreto, mas que ninguém navegando por
+    teclado precise caçar na tela.
+  */
+  :focus-visible {
+    @apply outline-none ring-2 ring-accent ring-offset-2 ring-offset-bg;
+  }
+
+  /* Tipografia com números alinhados — importante para dinheiro e horários. */
+  .tabular {
+    font-variant-numeric: tabular-nums;
+  }
+
+  ::selection {
+    background: rgb(var(--mk-accent-soft) / 0.45);
+  }
+
+  /* Barras de rolagem discretas no desktop. */
+  @media (pointer: fine) {
+    ::-webkit-scrollbar {
+      width: 10px;
+      height: 10px;
+    }
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: rgb(var(--mk-line));
+      border-radius: 999px;
+      border: 3px solid rgb(var(--mk-bg));
+    }
+  }
+}
+
+@layer components {
+  /* Rótulo de seção: pequeno, espaçado, discreto. */
+  .secao {
+    @apply text-section font-medium uppercase tracking-[0.08em] text-faint;
+  }
+
+  /* A superfície padrão do Mikasa. Uma borda, sem sombra pesada. */
+  .cartao {
+    @apply rounded-lg border border-line bg-surface;
+  }
+
+  /* Área tocável mínima de 44px, mesmo quando o conteúdo é menor. */
+  .toque {
+    @apply min-h-[44px] min-w-[44px];
+  }
+}
+
+/*
+  Respeito a "reduzir movimento".
+
+  Não desligamos só as animações declaradas — desligamos as transições também.
+  Quem pede menos movimento normalmente pede por um motivo físico, não estético.
+*/
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* O mesmo, quando a preferência vem do perfil do usuário e não do sistema. */
+[data-motion='reduzido'] *,
+[data-motion='reduzido'] *::before,
+[data-motion='reduzido'] *::after {
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important;
+}

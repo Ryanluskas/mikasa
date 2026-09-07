@@ -1,0 +1,452 @@
+// Mikasa — schema do banco.
+//
+// Convenções deste schema:
+//  - Todo recurso do usuário carrega `userId` com índice e `onDelete: Cascade`,
+//    para que "excluir conta" seja realmente completo.
+//  - Dinheiro nunca é float. Sempre Int em centavos (`...Cents`).
+//  - SQLite não suporta enums no Prisma; os campos "enum" são String e a
+//    validação acontece no Zod (src/lib/validation.ts).
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  profile       Profile?
+  sessions      Session[]
+  modules       ModulePref[]
+  tasks         Task[]
+  events        Event[]
+  habits        Habit[]
+  habitEntries  HabitEntry[]
+  goals         Goal[]
+  goalSteps     GoalStep[]
+  transactions  Transaction[]
+  budgets       Budget[]
+  workouts      Workout[]
+  exercises     WorkoutExercise[]
+  subjects      Subject[]
+  exams         Exam[]
+  studySessions StudySession[]
+  projects      Project[]
+  reminders     Reminder[]
+  relationships Relationship[]
+  checkins      Checkin[]
+  insights      Insight[]
+  notifications Notification[]
+}
+
+/// Sessão de autenticação. Guardamos o HASH do token, nunca o token em si:
+/// um vazamento do banco não deve permitir personificar ninguém.
+model Session {
+  id        String    @id @default(cuid())
+  userId    String
+  tokenHash String    @unique
+  createdAt DateTime  @default(now())
+  expiresAt DateTime
+  lastSeen  DateTime  @default(now())
+  userAgent String?
+  revokedAt DateTime?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+model Profile {
+  id             String  @id @default(cuid())
+  userId         String  @unique
+  displayName    String
+  timezone       String  @default("America/Sao_Paulo")
+  theme          String  @default("system")
+  weekStart      Int     @default(1)
+  onboardingDone Boolean @default(false)
+
+  // Contexto capturado no onboarding — alimenta a personalização da Home.
+  routineTags String  @default("[]")
+  mainGoal    String?
+  weekShape   String?
+
+  // Preferências de convivência
+  streaksEnabled   Boolean @default(true)
+  remindersEnabled Boolean @default(true)
+  quietHoursStart  Int     @default(22)
+  quietHoursEnd    Int     @default(7)
+  lifeLayerEnabled Boolean @default(true)
+  reducedMotion    Boolean @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+/// Quais áreas o usuário quer ver. A Home e a navegação leem daqui.
+model ModulePref {
+  id      String  @id @default(cuid())
+  userId  String
+  key     String
+  enabled Boolean @default(true)
+  order   Int     @default(0)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, key])
+  @@index([userId])
+}
+
+model Task {
+  id        String    @id @default(cuid())
+  userId    String
+  title     String
+  notes     String?
+  done      Boolean   @default(false)
+  doneAt    DateTime?
+  dueAt     DateTime?
+  priority  Int       @default(1)
+  area      String    @default("personal")
+  projectId String?
+  subjectId String?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  user    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  project Project? @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  subject Subject? @relation(fields: [subjectId], references: [id], onDelete: SetNull)
+
+  @@index([userId, done])
+  @@index([userId, dueAt])
+  @@index([projectId])
+  @@index([subjectId])
+}
+
+model Event {
+  id          String    @id @default(cuid())
+  userId      String
+  title       String
+  notes       String?
+  location    String?
+  category    String    @default("personal")
+  startAt     DateTime
+  endAt       DateTime
+  allDay      Boolean   @default(false)
+  repeat      String    @default("none")
+  repeatUntil DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, startAt])
+}
+
+model Habit {
+  id            String   @id @default(cuid())
+  userId        String
+  name          String
+  targetPerWeek Int      @default(7)
+  archived      Boolean  @default(false)
+  createdAt     DateTime @default(now())
+
+  user    User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  entries HabitEntry[]
+
+  @@index([userId, archived])
+}
+
+model HabitEntry {
+  id      String   @id @default(cuid())
+  userId  String
+  habitId String
+  /// Data local normalizada para 00:00 — um registro por hábito por dia.
+  date    DateTime
+  done    Boolean  @default(true)
+
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  habit Habit @relation(fields: [habitId], references: [id], onDelete: Cascade)
+
+  @@unique([habitId, date])
+  @@index([userId, date])
+}
+
+model Goal {
+  id           String    @id @default(cuid())
+  userId       String
+  title        String
+  description  String?
+  area         String    @default("personal")
+  /// Metas financeiras usam centavos; as demais usam targetValue/currentValue.
+  targetCents  Int?
+  currentCents Int?
+  targetValue  Float?
+  currentValue Float?
+  unit         String?
+  deadline     DateTime?
+  status       String    @default("active")
+  completedAt  DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  user  User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  steps GoalStep[]
+
+  @@index([userId, status])
+}
+
+model GoalStep {
+  id     String  @id @default(cuid())
+  userId String
+  goalId String
+  title  String
+  done   Boolean @default(false)
+  order  Int     @default(0)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  goal Goal @relation(fields: [goalId], references: [id], onDelete: Cascade)
+
+  @@index([goalId])
+  @@index([userId])
+}
+
+model Transaction {
+  id          String   @id @default(cuid())
+  userId      String
+  type        String
+  /// Sempre positivo, em centavos. O sinal vem de `type`.
+  amountCents Int
+  category    String
+  description String?
+  occurredAt  DateTime
+  recurring   Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, occurredAt])
+  @@index([userId, category])
+}
+
+model Budget {
+  id         String @id @default(cuid())
+  userId     String
+  category   String
+  limitCents Int
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, category])
+  @@index([userId])
+}
+
+model Workout {
+  id          String   @id @default(cuid())
+  userId      String
+  kind        String
+  title       String?
+  startedAt   DateTime
+  durationMin Int      @default(60)
+  intensity   Int      @default(2)
+  notes       String?
+  createdAt   DateTime @default(now())
+
+  user      User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  exercises WorkoutExercise[]
+
+  @@index([userId, startedAt])
+}
+
+model WorkoutExercise {
+  id        String @id @default(cuid())
+  userId    String
+  workoutId String
+  name      String
+  sets      Int    @default(3)
+  reps      Int    @default(10)
+  /// Carga em gramas — inteiro, para evitar imprecisão de ponto flutuante.
+  weightG   Int    @default(0)
+  restSec   Int    @default(60)
+  order     Int    @default(0)
+
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  workout Workout @relation(fields: [workoutId], references: [id], onDelete: Cascade)
+
+  @@index([workoutId])
+  @@index([userId, name])
+}
+
+model Subject {
+  id        String   @id @default(cuid())
+  userId    String
+  name      String
+  createdAt DateTime @default(now())
+
+  user     User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  exams    Exam[]
+  sessions StudySession[]
+  tasks    Task[]
+
+  @@index([userId])
+}
+
+model Exam {
+  id        String   @id @default(cuid())
+  userId    String
+  subjectId String
+  title     String
+  date      DateTime
+  status    String   @default("preparing")
+  createdAt DateTime @default(now())
+
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  subject Subject @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+
+  @@index([userId, date])
+  @@index([subjectId])
+}
+
+model StudySession {
+  id        String   @id @default(cuid())
+  userId    String
+  subjectId String?
+  minutes   Int
+  startedAt DateTime
+  notes     String?
+
+  user    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  subject Subject? @relation(fields: [subjectId], references: [id], onDelete: SetNull)
+
+  @@index([userId, startedAt])
+  @@index([subjectId])
+}
+
+model Project {
+  id        String    @id @default(cuid())
+  userId    String
+  name      String
+  notes     String?
+  status    String    @default("active")
+  deadline  DateTime?
+  createdAt DateTime  @default(now())
+
+  user  User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tasks Task[]
+
+  @@index([userId, status])
+}
+
+model Reminder {
+  id       String @id @default(cuid())
+  userId   String
+  title    String
+  message  String?
+  category String @default("general")
+  /// Minutos desde a meia-noite, hora local do usuário.
+  timeMin     Int       @default(540)
+  /// JSON com dias da semana: [1,2,3,4,5] (0 = domingo)
+  daysOfWeek  String    @default("[0,1,2,3,4,5,6]")
+  enabled     Boolean   @default(true)
+  lastFiredAt DateTime?
+  createdAt   DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, enabled])
+}
+
+model Relationship {
+  id          String    @id @default(cuid())
+  userId      String
+  name        String
+  type        String    @default("partner")
+  birthday    DateTime?
+  anniversary DateTime?
+  notes       String?
+  /// Cadência desejada de contato, em dias. null = sem lembrete.
+  contactEveryDays Int?
+  lastContactAt    DateTime?
+  createdAt        DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+/// Check-in diário. É a matéria-prima mais importante da camada de vida:
+/// é o único lugar onde o usuário diz como ele está, e não o que ele fez.
+model Checkin {
+  id         String   @id @default(cuid())
+  userId     String
+  /// Data local normalizada para 00:00 — um check-in por dia.
+  date       DateTime
+  mood       Int
+  energy     Int
+  sleepHours Float?
+  note       String?
+  createdAt  DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, date])
+  @@index([userId, date])
+}
+
+/// Observação gerada pela camada de vida. Persistida para poder ser
+/// dispensada pelo usuário e para não mudar a cada render.
+model Insight {
+  id     String @id @default(cuid())
+  userId String
+  /// Chave estável do achado, para não repetir o mesmo insight todo dia.
+  key    String
+  kind   String
+  area   String @default("life")
+  title  String
+  body   String
+  /// Força do achado (0..1) — usada para ordenar, nunca exibida como "certeza".
+  strength    Float     @default(0.5)
+  windowFrom  DateTime
+  windowTo    DateTime
+  createdAt   DateTime  @default(now())
+  dismissedAt DateTime?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, key])
+  @@index([userId, dismissedAt])
+}
+
+model Notification {
+  id        String    @id @default(cuid())
+  userId    String
+  title     String
+  body      String?
+  href      String?
+  readAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, readAt])
+}
+
+/// Rate limiting persistido. Fica no banco (e não em memória) para continuar
+/// valendo com mais de uma instância do servidor.
+model RateLimit {
+  key         String   @id
+  count       Int      @default(0)
+  windowStart DateTime @default(now())
+
+  @@index([windowStart])
+}

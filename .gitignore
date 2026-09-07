@@ -1,0 +1,33 @@
+node_modules/
+.next/
+out/
+build/
+dist/
+
+# Ambiente — nunca versionar segredos
+.env
+.env.local
+.env.*.local
+
+# Banco local
+*.db
+*.db-journal
+prisma/dev.db*
+prisma/*.db*
+
+# Sistema / editor
+.DS_Store
+Thumbs.db
+*.log
+npm-debug.log*
+.vscode/
+.idea/
+
+# Testes
+coverage/
+.vitest/
+
+# Next
+next-env.d.ts
+.vercel
+tsconfig.tsbuildinfo
