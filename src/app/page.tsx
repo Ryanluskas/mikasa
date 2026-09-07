@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { Logo, Marca } from '@/components/brand/Logo';
+import { MikasaDither } from '@/components/brand/MikasaDither';
 
 export const metadata = {
   title: 'Mikasa — organize sua vida, uma coisa de cada vez',
@@ -37,32 +38,50 @@ export default function Home() {
 
       <main id="conteudo">
         {/* ── Hero ─────────────────────────────────────────────────────── */}
-        <section className="mx-auto max-w-5xl px-5 pb-20 pt-14 sm:pt-24">
-          <div className="max-w-2xl">
-            <h1 className="text-[2.5rem] font-semibold leading-[1.08] tracking-[-0.03em] text-ink sm:text-6xl">
-              Organize sua vida.
-              <br />
-              <span className="text-muted">Uma coisa de cada vez.</span>
-            </h1>
+        <section className="mx-auto max-w-5xl px-5 pb-20 pt-14 sm:pt-20">
+          <div className="grid items-center gap-12 lg:grid-cols-[1.05fr_0.95fr] lg:gap-16">
+            <div>
+              <h1 className="text-[2.5rem] font-semibold leading-[1.08] tracking-[-0.03em] text-ink sm:text-6xl">
+                Organize sua vida.
+                <br />
+                <span className="text-muted">Uma coisa de cada vez.</span>
+              </h1>
 
-            <p className="mt-6 max-w-lg text-lg leading-relaxed text-muted">
-              Finanças, treinos, estudos, trabalho, metas e rotina em um único
-              lugar.
-            </p>
+              <p className="mt-6 max-w-lg text-lg leading-relaxed text-muted">
+                Finanças, treinos, estudos, trabalho, metas e rotina em um único
+                lugar.
+              </p>
 
-            <div className="mt-9 flex flex-col gap-3 sm:flex-row">
-              <Link
-                href="/criar-conta"
-                className="inline-flex h-12 items-center justify-center rounded-md bg-ink px-7 text-base font-medium text-bg transition-colors hover:bg-ink/90"
-              >
-                Começar gratuitamente
-              </Link>
-              <Link
-                href="/entrar"
-                className="inline-flex h-12 items-center justify-center rounded-md border border-line bg-surface px-7 text-base text-ink transition-colors hover:bg-raised"
-              >
-                Já tenho conta
-              </Link>
+              <div className="mt-9 flex flex-col gap-3 sm:flex-row">
+                <Link
+                  href="/criar-conta"
+                  className="inline-flex h-12 items-center justify-center rounded-md bg-ink px-7 text-base font-medium text-bg transition-colors hover:bg-ink/90"
+                >
+                  Começar gratuitamente
+                </Link>
+                <Link
+                  href="/entrar"
+                  className="inline-flex h-12 items-center justify-center rounded-md border border-line bg-surface px-7 text-base text-ink transition-colors hover:bg-raised"
+                >
+                  Já tenho conta
+                </Link>
+              </div>
+            </div>
+
+            {/*
+              O elemento assinatura da página.
+              A marca do Mikasa é nanquim sobre papel; aqui ela é decomposta
+              em tinta sobre papel de novo, célula por célula. É a única peça
+              ousada da landing — tudo em volta fica quieto de propósito.
+            */}
+            {/*
+              No celular a arte vem DEPOIS do texto, de propósito: colocá-la
+              em cima empurrava a headline para fora da tela, e a primeira
+              coisa que a pessoa precisa ler é o que o produto faz — não a
+              ilustração.
+            */}
+            <div className="mx-auto w-full max-w-[300px] sm:max-w-[380px] lg:max-w-none">
+              <MikasaDither alt="A marca do Mikasa, desenhada ponto a ponto." />
             </div>
           </div>
         </section>

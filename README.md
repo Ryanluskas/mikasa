@@ -221,7 +221,26 @@ será escolhido com base no projeto real — e não agora, sem necessidade.
 
 ## Identidade
 
-A ilustração da marca fica em `public/brand/mikasa.png`. Para trocá-la:
+O hero da landing renderiza a marca em **dither animado** — a mesma técnica do
+efeito "Electric Gaze", reimplementada em Canvas2D
+([`src/lib/ascii/engine.ts`](src/lib/ascii/engine.ts)).
+
+A referência original é fundo quase-preto com um acento neon. Aqui ela roda em
+tinta sobre papel, porque a marca do Mikasa já é nanquim sobre papel: o dither
+vira uma extensão do traço, e não um filtro colado por cima dele. Em dark mode
+a tinta inverte sozinha, pelos tokens.
+
+Três decisões que valem saber antes de mexer:
+
+- **A imagem é amostrada uma vez.** A animação só modula um limiar por célula.
+  Reamostrar a cada quadro seriam milhares de leituras de canvas por frame.
+- **A contagem de células é fixa, o tamanho é derivado.** A referência define
+  célula em pixels, o que só funciona numa largura fixa. Numa página
+  responsiva, 9px viram 37 células num celular e o rosto some.
+- **`prefers-reduced-motion` desenha um quadro e para** — e o primeiro quadro
+  é síncrono, para o canvas não ficar vazio quando a aba abre em segundo plano.
+
+A ilustração fica em `public/brand/mikasa.png`. Para trocá-la:
 
 ```bash
 # substitua o arquivo e regenere favicon, ícones PWA e apple-touch-icon
