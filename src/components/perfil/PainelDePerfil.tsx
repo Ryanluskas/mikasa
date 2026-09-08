@@ -8,6 +8,7 @@ import { Sheet } from '@/components/ui/Sheet';
 import { Input, Segmentado, Select, Switch } from '@/components/ui/Field';
 import { useToast } from '@/components/ui/Toast';
 import { api, ErroApi } from '@/lib/http';
+import { limparCacheLocal } from '@/components/shell/ServiceWorker';
 import { MODULOS } from '@/lib/modules';
 import { minutosParaHora } from '@/lib/dates';
 import { VOZ } from '@/lib/voice';
@@ -104,6 +105,9 @@ export function PainelDePerfil({ email, perfil, modulos, dados }: Props) {
   async function sair() {
     try {
       await api('/api/auth/logout', { metodo: 'POST' });
+      // A sessão já morreu no servidor. Isto apaga o que ficou no aparelho —
+      // importante em celular compartilhado.
+      await limparCacheLocal();
       router.push('/entrar');
       router.refresh();
     } catch {
@@ -352,6 +356,8 @@ function ExcluirConta({ aberto, aoFechar }: { aberto: boolean; aoFechar: () => v
         metodo: 'DELETE',
         corpo: { password: senha, confirmacao },
       });
+      // A conta foi apagada do servidor; o aparelho não pode ficar com sobras.
+      await limparCacheLocal();
       router.push('/');
       router.refresh();
     } catch (erro) {

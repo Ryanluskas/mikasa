@@ -99,7 +99,9 @@ impedido de entrar por causa disso.
 `X-Content-Type-Options`, `X-Frame-Options: DENY`, `Referrer-Policy`,
 `Permissions-Policy` e `Strict-Transport-Security` (só em produção).
 
-A CSP é montada por requisição, com nonce novo, no middleware.
+A CSP é estática e vem de `next.config.mjs`. Ela **não** usa nonce — a versão
+com nonce quebrava a aplicação inteira em produção. O caso está detalhado na
+seção 2, e a justificativa completa está no comentário de `next.config.mjs`.
 
 ### Privacidade
 
@@ -117,6 +119,36 @@ A CSP é montada por requisição, com nonce novo, no middleware.
 
 Todos foram encontrados durante esta auditoria, por testes automatizados ou
 inspeção no navegador.
+
+### CRÍTICO — a CSP com nonce impedia o React de hidratar em produção
+
+**Sintoma:** em um build de produção, nenhum componente cliente funcionava.
+Sem check-in, sem marcar tarefa, sem trocar tema, sem service worker. A página
+carregava e ficava morta. Em desenvolvimento estava tudo normal.
+
+**Causa raiz:** a CSP era montada por requisição no middleware, com um nonce
+novo a cada vez. Mas `/`, `/entrar`, `/criar-conta` e `/offline` são
+**pré-renderizadas no build** — quando não existe requisição, nem middleware,
+nem nonce. O HTML delas sai com scripts inline sem nonce, e em tempo de
+execução chegava um header exigindo nonce. Resultado: o navegador bloqueava
+todos os scripts inline do Next, incluindo o *payload* dos React Server
+Components, e a hidratação nunca acontecia.
+
+Nonce e pré-renderização estática são incompatíveis por construção.
+
+**Correção:** a CSP virou estática, aplicada a todas as respostas por
+`next.config.mjs`, com `'unsafe-inline'` em `script-src`. O trade-off está
+documentado no próprio arquivo: o projeto não tem nenhum
+`dangerouslySetInnerHTML` e não renderiza HTML de usuário, então o ganho real
+do nonce sobre `'self'` seria bloquear script inline injetado — o que exigiria
+primeiro uma falha de escape do React. Todo o resto da política continua
+estrito.
+
+**Por que passou na primeira auditoria:** a verificação foi feita apenas com
+`next dev`, onde toda página é renderizada por requisição e o problema não
+existe. Foi um erro de método — uma política que só se comporta diferente em
+produção precisa ser testada em produção. As verificações de CSP agora rodam
+contra `next build && next start`.
 
 ### ALTO — CSP bloqueava o próprio script do aplicativo
 
@@ -312,6 +344,22 @@ aplicação não muda — nenhuma query usa SQL específico de dialeto.
 A infraestrutura de backup depende de onde o projeto for hospedado. Com
 PostgreSQL gerenciado (Neon, Supabase, RDS) o backup vem do provedor e deve ser
 **testado restaurando**, não apenas configurado.
+
+### Offline cobre o casco, não os dados
+
+Existe um service worker (`public/sw.js`) com tela offline. Ele guarda apenas
+o que é igual para todo mundo: o casco do app, os estáticos do Next, os ícones
+e a arte da marca.
+
+**HTML autenticado e respostas da API nunca entram no cache**, e isso é
+deliberado: num aparelho compartilhado, uma tela de finanças guardada em disco
+seria legível pela próxima pessoa mesmo depois do logout. Verificado — após
+login e navegação, o cache não contém nenhuma rota `/api/` nem página do app.
+
+A consequência é que o Mikasa offline mostra uma tela honesta em vez de dados
+velhos. **Ainda não existe fila de ações offline**: marcar uma tarefa sem
+conexão não funciona. É o próximo passo natural (IndexedDB + sincronização ao
+reconectar) e é o que falta para o app instalado valer a pena no metrô.
 
 ### Notificações push não implementadas
 

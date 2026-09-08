@@ -53,58 +53,22 @@ export function middleware(req: NextRequest) {
     return NextResponse.redirect(url);
   }
 
-  const nonce = Buffer.from(crypto.randomUUID()).toString('base64');
-
-  // Sobre a ausência de `strict-dynamic` aqui:
+  // A Content-Security-Policy NÃO é montada aqui.
   //
-  // Ele parece a opção mais rígida, mas DESLIGA o allowlist por host — com
-  // ele presente, nem `'self'` vale, e os próprios arquivos do Mikasa
-  // (como /tema.js) passam a ser bloqueados.
-  //
-  // `strict-dynamic` existe para quem precisa liberar vários CDNs de
-  // terceiros. O Mikasa não carrega script de lugar nenhum além do próprio
-  // domínio, então `'self'` + nonce já é o mais estrito possível aqui:
-  //  - os scripts inline que o Next gera recebem o nonce automaticamente,
-  //    porque ele lê a CSP do header da requisição;
-  //  - os arquivos servidos por nós passam por `'self'`;
-  //  - qualquer script injetado de fora continua bloqueado.
-  //
-  // Em desenvolvimento o Next usa eval para o hot reload, então `unsafe-eval`
-  // existe só ali.
-  const csp = [
-    `default-src 'self'`,
-    `script-src 'self' 'nonce-${nonce}'${
-      process.env.NODE_ENV === 'development' ? " 'unsafe-eval'" : ''
-    }`,
-    // O Next injeta CSS crítico inline; sem `unsafe-inline` a página aparece
-    // sem estilo. É a exceção consciente desta política.
-    `style-src 'self' 'unsafe-inline'`,
-    `img-src 'self' blob: data:`,
-    `font-src 'self' data:`,
-    `connect-src 'self'`,
-    `object-src 'none'`,
-    `base-uri 'self'`,
-    `form-action 'self'`,
-    `frame-ancestors 'none'`,
-    `upgrade-insecure-requests`,
-  ].join('; ');
-
-  const headers = new Headers(req.headers);
-  headers.set('x-nonce', nonce);
-  // O Next lê a CSP do header da REQUISIÇÃO para saber qual nonce carimbar
-  // nos scripts que ele mesmo gera.
-  headers.set('content-security-policy', csp);
-
-  const res = NextResponse.next({ request: { headers } });
-  res.headers.set('content-security-policy', csp);
-  return res;
+  // A versão anterior gerava um nonce por requisição neste ponto. Isso quebrava
+  // a aplicação em produção: as páginas pré-renderizadas no build saem sem
+  // nonce, o middleware exigia nonce em tempo de execução, e o React parava de
+  // hidratar. A política agora é estática e vive em `next.config.mjs`, onde o
+  // raciocínio completo está documentado.
+  return NextResponse.next();
 }
 
 export const config = {
   matcher: [
     /*
-      Tudo, menos arquivos estáticos e imagens — eles não precisam de CSP
-      nem de checagem de sessão, e passar por aqui seria só latência.
+      Tudo, menos arquivos estáticos e imagens: eles não precisam de checagem
+      de sessão, e passar por aqui seria só latência. A CSP não depende deste
+      matcher — ela é aplicada a todas as respostas por next.config.mjs.
     */
     {
       source: '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:png|jpg|jpeg|svg|webp|ico|webmanifest)$).*)',
