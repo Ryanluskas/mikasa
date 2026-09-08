@@ -31,3 +31,6 @@ coverage/
 next-env.d.ts
 .vercel
 tsconfig.tsbuildinfo
+
+# Configuração local de ferramentas — removida do repositório de propósito
+.claude/
