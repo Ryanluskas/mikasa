@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { Logo, Marca } from '@/components/brand/Logo';
 import { MikasaDither } from '@/components/brand/MikasaDither';
+import { CamadaDeMovimento } from '@/components/motion/CamadaDeMovimento';
 
 export const metadata = {
   title: 'Mikasa — organize sua vida, uma coisa de cada vez',
@@ -18,6 +19,8 @@ export const metadata = {
 export default function Home() {
   return (
     <div className="min-h-dvh bg-bg">
+      <CamadaDeMovimento />
+
       <header className="mx-auto flex max-w-5xl items-center justify-between px-5 py-6">
         <Logo />
         <nav className="flex items-center gap-1">
@@ -80,7 +83,10 @@ export default function Home() {
               coisa que a pessoa precisa ler é o que o produto faz — não a
               ilustração.
             */}
-            <div className="mx-auto w-full max-w-[300px] sm:max-w-[380px] lg:max-w-none">
+            <div
+              data-parallax="1"
+              className="mx-auto w-full max-w-[300px] sm:max-w-[380px] lg:max-w-none"
+            >
               <MikasaDither alt="A marca do Mikasa, desenhada ponto a ponto." />
             </div>
           </div>
@@ -89,11 +95,17 @@ export default function Home() {
         {/* ── Uma vida, um lugar ───────────────────────────────────────── */}
         <section className="border-y border-line bg-surface">
           <div className="mx-auto max-w-5xl px-5 py-20">
-            <h2 className="max-w-md text-3xl font-semibold leading-tight tracking-[-0.02em] text-ink">
+            <h2
+              data-revelar
+              className="max-w-md text-3xl font-semibold leading-tight tracking-[-0.02em] text-ink"
+            >
               Uma vida. Um lugar para organizar tudo.
             </h2>
 
-            <ul className="mt-12 grid gap-x-8 gap-y-10 sm:grid-cols-2 lg:grid-cols-3">
+            <ul
+              data-revelar-lote
+              className="mt-12 grid gap-x-8 gap-y-10 sm:grid-cols-2 lg:grid-cols-3"
+            >
               {[
                 {
                   titulo: 'Financeiro',
@@ -132,25 +144,33 @@ export default function Home() {
 
         {/* ── O diferencial ────────────────────────────────────────────── */}
         <section className="mx-auto max-w-5xl px-5 py-24">
-          <p className="secao">O que o Mikasa faz de diferente</p>
+          <p data-revelar className="secao">
+            O que o Mikasa faz de diferente
+          </p>
 
-          <h2 className="mt-4 max-w-2xl text-3xl font-semibold leading-tight tracking-[-0.02em] text-ink sm:text-4xl">
+          <h2
+            data-revelar
+            className="mt-4 max-w-2xl text-3xl font-semibold leading-tight tracking-[-0.02em] text-ink sm:text-4xl"
+          >
             Não são seis aplicativos dentro de um.
             <br />
             <span className="text-muted">É o que acontece quando eles conversam.</span>
           </h2>
 
-          <p className="mt-6 max-w-xl text-lg leading-relaxed text-muted">
+          <p data-revelar className="mt-6 max-w-xl text-lg leading-relaxed text-muted">
             Qualquer app anota que você treinou. Qualquer app anota quanto você
             gastou. Nenhum deles responde a pergunta que você realmente tem:
           </p>
 
-          <p className="mt-4 max-w-xl text-lg font-medium leading-relaxed text-ink">
+          <p
+            data-revelar
+            className="mt-4 max-w-xl text-lg font-medium leading-relaxed text-ink"
+          >
             &ldquo;Como essas coisas estão afetando a minha vida?&rdquo;
           </p>
 
           {/* Exemplos reais do que a camada de vida produz. */}
-          <div className="mt-12 grid gap-4 sm:grid-cols-2">
+          <div data-revelar-lote className="mt-12 grid gap-4 sm:grid-cols-2">
             {[
               {
                 titulo: 'Sono e disposição andam juntos',
@@ -196,7 +216,7 @@ export default function Home() {
         <section className="border-y border-line bg-surface">
           <div className="mx-auto max-w-5xl px-5 py-20">
             <div className="grid items-center gap-12 lg:grid-cols-2">
-              <div>
+              <div data-revelar-lote>
                 <h2 className="text-3xl font-semibold leading-tight tracking-[-0.02em] text-ink">
                   Seu dia, sem complicação.
                 </h2>
@@ -213,7 +233,10 @@ export default function Home() {
               {/* Amostra da interface, montada com os mesmos tokens do app. */}
               <div className="rounded-lg border border-line bg-bg p-5">
                 <p className="secao">Hoje</p>
-                <div className="mt-3 divide-y divide-line rounded-md border border-line bg-surface">
+                <div
+                  data-revelar-lote
+                  className="mt-3 divide-y divide-line rounded-md border border-line bg-surface"
+                >
                   {[
                     { hora: '08:00', titulo: 'Aula' },
                     { hora: '13:00', titulo: 'Trabalho' },
@@ -229,7 +252,10 @@ export default function Home() {
                   ))}
                 </div>
 
-                <div className="mt-4 rounded-md border border-line bg-surface px-4 py-3.5">
+                <div
+                  data-revelar
+                  className="mt-4 rounded-md border border-line bg-surface px-4 py-3.5"
+                >
                   <p className="text-sm text-ink">
                     Você treinou 3 vezes esta semana. Continue assim.
                   </p>
@@ -240,7 +266,10 @@ export default function Home() {
         </section>
 
         {/* ── Fechamento ───────────────────────────────────────────────── */}
-        <section className="mx-auto max-w-5xl px-5 py-28 text-center">
+        <section
+          data-revelar-lote
+          className="mx-auto max-w-5xl px-5 py-28 text-center"
+        >
           <Marca tamanho={56} className="mx-auto" />
 
           <h2 className="mx-auto mt-8 max-w-xl text-3xl font-semibold leading-tight tracking-[-0.02em] text-ink sm:text-4xl">
