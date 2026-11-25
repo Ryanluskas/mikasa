@@ -3,6 +3,7 @@ node_modules/
 out/
 build/
 dist/
+.expo/
 
 # Ambiente — nunca versionar segredos
 .env
@@ -31,3 +32,6 @@ coverage/
 next-env.d.ts
 .vercel
 tsconfig.tsbuildinfo
+
+# Configuração local de ferramentas — removida do repositório de propósito
+.claude/
