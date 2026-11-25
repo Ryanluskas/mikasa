@@ -1,0 +1,17 @@
+{
+  "expo": {
+    "name": "Mikasa Mobile",
+    "slug": "mikasa-mobile",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "extra": {
+      "eas": {
+        "projectId": "855b9da6-4d1d-4a74-bd33-a770d9df2698"
+      }
+    },
+    "android": {
+      "package": "com.ryanlukas.mikasamobile"
+    }
+  }
+}
